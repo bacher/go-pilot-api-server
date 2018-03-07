@@ -1,6 +1,8 @@
 package getInitialData
 
-import "fmt"
+import (
+	"bytes"
+)
 
 var Name = "getInitialData"
 
@@ -8,17 +10,40 @@ type Params struct {
 	Name string `json:"name"`
 }
 
-var data map[string]string
+type Response struct {
+	Name  string `json:"name"`
+	Age   int8   `json:"age"`
+	Rules []Rule `json:"rules"`
+}
+
+type Rule struct {
+	Id   int32  `json:"id"`
+	Text string `json:"text"`
+}
+
+//var data map[string]string
 
 func Do(p *Params) interface{} {
-	if data == nil {
-		data = make(map[string]string)
+	var buf bytes.Buffer
 
-		data["field1"] = "Who are you?"
-		data["field2"] = "What is your name?"
+	for i := 0; i < 100; i++ {
+		buf.WriteString("kek")
 	}
 
-	fmt.Println(p.Name)
+	//mmm := &map[string]string{
+	//	"field1": fmt.Sprintf("%s, Who Am I?", p.Name),
+	//	"field2": buf.String(),
+	//}
 
-	return data
+	resp := &Response{
+		Name: p.Name,
+		Age:  31,
+		Rules: []Rule{
+			{1, "Hello"},
+			{2, p.Name},
+			{3, "Goodbye"},
+		},
+	}
+
+	return resp
 }

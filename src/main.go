@@ -13,7 +13,7 @@ import (
 	"regexp"
 )
 
-const PORT = ":8080"
+const PORT = ":8444"
 
 var apiRx *regexp.Regexp
 
@@ -49,11 +49,16 @@ func main() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(404)
+		fmt.Fprint(w, "Not found")
+		return
+	}
+
 	apiMatch := apiRx.FindStringSubmatch(r.URL.Path)
 
 	if len(apiMatch) == 0 {
 		w.WriteHeader(404)
-
 		fmt.Fprint(w, "Sorry, bad api")
 		return
 	}
@@ -90,13 +95,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	switch apiMatch[1] {
 	case getInitialData.Name:
 		p := &getInitialData.Params{}
-		if !tt(params, p, w) {
+		if !tt(params, p) {
+			returnBadRequest(w)
 			return
 		}
 		data = getInitialData.Do(p)
 	case makeHappy.Name:
 		p := &makeHappy.Params{}
-		if !tt(params, p, w) {
+		if !tt(params, p) {
+			returnBadRequest(w)
 			return
 		}
 		data = makeHappy.Do(p)
@@ -127,12 +134,13 @@ func returnFail(w http.ResponseWriter) {
 	fmt.Fprintln(w, "Internal Error")
 }
 
-func tt(data []*json.RawMessage, params interface{}, w http.ResponseWriter) bool {
-	if len(data) >= 2 {
-		if json.Unmarshal(*data[1], params) != nil {
-			returnBadRequest(w)
-			return false
-		}
+func tt(data []*json.RawMessage, params interface{}) bool {
+	if len(data) != 2 {
+		return false
+	}
+
+	if err := json.Unmarshal(*data[1], params); err != nil {
+		return false
 	}
 
 	return true
